@@ -11,13 +11,6 @@ namespace YoukaiFox.AudioManager
         #endregion
 
         #region Serialized fields
-
-        [SerializeField]
-        private bool _updateOnValueChanged = true;
-
-        [SerializeField]
-        private Toggle _muteSoundToggle;
-
         [SerializeField]
         private Slider _musicVolumeSlider;
 
@@ -25,8 +18,15 @@ namespace YoukaiFox.AudioManager
         private Slider _sfxVolumeSlider;
 
         [SerializeField]
-        [Tooltip("An audio clip to play when adjusting the volume.")]
-        private AudioClip _audioTextClip;
+        private Toggle _muteSoundToggle;
+
+        [SerializeField]
+        private bool _updateOnValueChanged = true;
+
+
+        // [SerializeField]
+        // [Tooltip("An audio clip to play when adjusting the volume.")]
+        // private AudioClip _audioTestClip;
 
         #endregion
 
