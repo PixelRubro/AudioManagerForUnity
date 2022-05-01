@@ -50,6 +50,8 @@ namespace YoukaiFox.AudioManager
 
         private bool _isCrossfading;
 
+        private bool _isFading;
+
         private List<AudioSource> _bgmPlayers;
 
         private AudioSource _currentBgmPlayer;
@@ -67,6 +69,12 @@ namespace YoukaiFox.AudioManager
         private const int BgmPlayersCount = 2;
 
         private const int SfxPlayersCount = 5;
+
+        #endregion
+
+        #region Properties
+
+        private bool IsBusy => _isFading || _isCrossfading;
 
         #endregion
 
@@ -121,7 +129,7 @@ namespace YoukaiFox.AudioManager
 
             _currentBgm = clip;
 
-            if (_isMuted)
+            if ((_isMuted) || (IsBusy))
             {
                 return;
             }
@@ -158,6 +166,22 @@ namespace YoukaiFox.AudioManager
             }
         }
 
+        public void StopBgm(bool fadeOut = true, float fadeOutDuration = 3f)
+        {
+            if (!_currentBgmPlayer.isPlaying)
+            {
+                return;
+            }
+
+            if (!fadeOut)
+            {
+                _currentBgmPlayer.Stop();
+                return;
+            }
+
+            FadeOutBgm(fadeOutDuration);
+        }
+
         /// <summary>
         /// Plays an AudioClip.
         /// </summary>
@@ -182,6 +206,17 @@ namespace YoukaiFox.AudioManager
                 player.clip = clip;
                 player.volume = _sfxVolume;
                 player.Play();
+            }
+        }
+
+        public void StopAllSfx()
+        {
+            foreach (var player in _sfxPlayers)
+            {
+                if (player.isPlaying)
+                {
+                    player.Stop();
+                }
             }
         }
 
@@ -319,6 +354,18 @@ namespace YoukaiFox.AudioManager
             return newSource;
         }
 
+        private void FadeOutBgm(float fadeOutDuration)
+        {
+            _isFading = true;
+            _currentBgmPlayer.DOFade(0f, fadeOutDuration).OnComplete(FinishFadingOut);
+        }
+
+        private void FinishFadingOut()
+        {
+            _isFading = false;
+            _currentBgmPlayer.Stop();
+        }
+
         #region Setup operations
 
         private void SetUpSingleton()
@@ -341,9 +388,10 @@ namespace YoukaiFox.AudioManager
 
             for (int i = 0; i < BgmPlayersCount; i++)
             {
-                _bgmPlayers[i] = InstantiateAudioSource($"BGM Player {i}");
-                _bgmPlayers[i].playOnAwake = false;
-                _bgmPlayers[i].loop = true;
+                var bgmPlayer = InstantiateAudioSource($"BGM Player {i}");
+                bgmPlayer.playOnAwake = false;
+                bgmPlayer.loop = true;
+                _bgmPlayers.Add(bgmPlayer);
             }
 
             _currentBgmPlayer = _bgmPlayers.First();
@@ -351,9 +399,10 @@ namespace YoukaiFox.AudioManager
 
             for (int i = 0; i < SfxPlayersCount; i++)
             {
-                _sfxPlayers[i] = InstantiateAudioSource($"SFX Player {i}");
-                _sfxPlayers[i].playOnAwake = false;
-                _sfxPlayers[i].loop = false;
+                var sfxPlayer = InstantiateAudioSource($"SFX Player {i}");
+                sfxPlayer.playOnAwake = false;
+                sfxPlayer.loop = false;
+                _sfxPlayers.Add(sfxPlayer);
             }
         }
 
@@ -376,9 +425,9 @@ namespace YoukaiFox.AudioManager
             }
 
             var soundSettings = GetCurrentSettings();
-            PlayerPrefs.SetInt("IsSoundMuted", soundSettings.IsMuted ? 1 : 0);
-            PlayerPrefs.SetFloat("SfxVolume", soundSettings.SfxVolume);
-            PlayerPrefs.SetFloat("BgmVolume", soundSettings.BgmVolume);
+            PlayerPrefs.SetInt("is_sound_muted", soundSettings.IsMuted ? 1 : 0);
+            PlayerPrefs.SetFloat("sfx_volume", soundSettings.SfxVolume);
+            PlayerPrefs.SetFloat("bgm_volume", soundSettings.BgmVolume);
         }
 
         private void LoadSettings()
@@ -388,9 +437,9 @@ namespace YoukaiFox.AudioManager
                 return;
             }
 
-            _isMuted = PlayerPrefs.GetInt("IsSoundMuted", 0) == 1;
-            _sfxVolume = PlayerPrefs.GetFloat("SfxVolume", 1f);
-            _bgmVolume = PlayerPrefs.GetFloat("BgmVolume", 1f);
+            _isMuted = PlayerPrefs.GetInt("is_sound_muted", 0) == 1;
+            _sfxVolume = PlayerPrefs.GetFloat("sfx_volume", 1f);
+            _bgmVolume = PlayerPrefs.GetFloat("bgm_volume", 1f);
 
             SetMute(_isMuted);
             UpdateVolume();
