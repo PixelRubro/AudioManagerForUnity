@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEngine;
 using DG.Tweening;
 
-namespace YoukaiFox.AudioManager
+namespace YoukaiFox.Audio
 {
     public class AudioManager : MonoBehaviour
     {

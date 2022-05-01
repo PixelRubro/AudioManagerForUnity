@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace YoukaiFox.AudioManager
+namespace YoukaiFox.Audio
 {
     public class AudioSettingsMenu : MonoBehaviour
     {
