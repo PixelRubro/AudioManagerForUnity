@@ -249,10 +249,13 @@ namespace YoukaiFox.Audio
         /// </summary>
         public AudioSettings GetCurrentSettings()
         {
-            var settings = new AudioSettings();
-            settings.BgmVolume = _bgmVolume;
-            settings.SfxVolume = _sfxVolume;
-            settings.IsMuted = _isMuted;
+            var settings = new AudioSettings
+            {
+                BgmVolume = _bgmVolume,
+                SfxVolume = _sfxVolume,
+                IsMuted = _isMuted
+            };
+
             return settings;
         }
 
