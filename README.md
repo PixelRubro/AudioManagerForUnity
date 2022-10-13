@@ -13,4 +13,4 @@
 
 Add the following line to your `manifest.json` found in the "Packages" folder
 
-`    "com.softboiledgames.unityxtension": "git@github.com:SoftBoiledGames/UnityAudioManager.git"`
+`    "com.softboiledgames.unityaudiomanager": "git@github.com:SoftBoiledGames/UnityAudioManager.git"`
