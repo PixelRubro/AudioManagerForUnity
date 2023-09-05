@@ -582,8 +582,9 @@ namespace PixelSpark.UnityAudioManager
 
         private AudioSource InstantiateAudioSource(string name)
         {
-            var newGameObject = Instantiate(new GameObject(name), _transform, false);
-            var newAudioSource = newGameObject.AddComponent<AudioSource>();
+            var newGameObject = new GameObject(name, typeof(AudioSource));
+            newGameObject.transform.SetParent(_transform);
+            var newAudioSource = newGameObject.GetComponent<AudioSource>();
             newAudioSource.playOnAwake = false;
             return newAudioSource;
         }
