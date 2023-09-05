@@ -3,9 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using DG.Tweening;
 
-namespace YoukaiFox.Audio
+namespace PixelSpark.UnityAudioManager
 {
     public class AudioManager : MonoBehaviour
     {
@@ -20,9 +19,9 @@ namespace YoukaiFox.Audio
 
         #region Serialized fields
 
-        // [SerializeField]
-        // [Range(0f, 1f)]
-        // private float _masterVolume = 1f;
+        [SerializeField]
+        [Range(0f, 1f)]
+        private float _masterVolume = 1f;
 
         [SerializeField]
         [Range(0f, 1f)]
@@ -33,10 +32,14 @@ namespace YoukaiFox.Audio
         private float _sfxVolume = 1f;
 
         [SerializeField]
+        [Range(0f, 1f)]
+        private float _voiceVolume = 1f;
+
+        [SerializeField]
         private bool _isMuted = false;
 
         [SerializeField]
-        private float _crossfadeDuration = 3f;
+        private float _fadeDuration = 3f;
 
         [SerializeField]
         private bool _autoSaveToPlayerPrefs = true;
@@ -48,9 +51,9 @@ namespace YoukaiFox.Audio
 
         #region Non-serialized fields
 
-        private bool _isCrossfading;
+        private AudioClip _currentBgm;
 
-        private bool _isFading;
+        private AudioClip _previousBgm;
 
         private List<AudioSource> _bgmPlayers;
 
@@ -58,7 +61,7 @@ namespace YoukaiFox.Audio
 
         private List<AudioSource> _sfxPlayers;
 
-        private AudioClip _currentBgm;
+        private List<AudioSource> _voicePlayers;
 
         private Transform _transform;
 
@@ -70,11 +73,17 @@ namespace YoukaiFox.Audio
 
         private const int SfxPlayersCount = 5;
 
+        private const int VoicePlayersCount = 2;
+
         #endregion
 
         #region Properties
 
-        private bool IsBusy => _isFading || _isCrossfading;
+        private float BgmVolume => _bgmVolume > _masterVolume ? _masterVolume : _bgmVolume;
+
+        private float SfxVolume => _sfxVolume > _masterVolume ? _masterVolume : _sfxVolume;
+
+        private float VoiceVolume => _voiceVolume > _masterVolume ? _masterVolume : _voiceVolume;
 
         #endregion
 
@@ -82,9 +91,13 @@ namespace YoukaiFox.Audio
 
         public struct AudioSettings
         {
+            public float MasterVolume;
+
             public float BgmVolume;
 
             public float SfxVolume;
+
+            public float VoiceVolume;
 
             public bool IsMuted;
         }
@@ -122,28 +135,41 @@ namespace YoukaiFox.Audio
                 return;
             }
 
-            if ((clip == _currentBgm) && (!forceRestart))
+            if ((clip == _currentBgm) && (forceRestart))
             {
-                return;
-            }
-
-            _currentBgm = clip;
-
-            if ((_isMuted) || (IsBusy))
-            {
-                return;
-            }
-
-            if ((!_currentBgmPlayer.isPlaying) || (crossFade = false))
-            {
-                _currentBgmPlayer.clip = clip;
-                _currentBgmPlayer.volume = _bgmVolume;
+                _currentBgmPlayer.Stop();
                 _currentBgmPlayer.Play();
                 return;
             }
 
-            var nextBgmPlayer = GetAvailableBgmPlayer();
-            Crossfade(_currentBgmPlayer, nextBgmPlayer);
+            _previousBgm = _currentBgm;
+            _currentBgm = clip;
+
+            if (_isMuted)
+            {
+                return;
+            }
+
+            if (!crossFade)
+            {
+                _currentBgmPlayer.Stop();
+                _currentBgmPlayer.clip = _currentBgm;
+                _currentBgmPlayer.volume = BgmVolume;
+                _currentBgmPlayer.Play();
+                return;
+            }
+            
+            if (_currentBgmPlayer.isPlaying)
+            {
+                FadeAudioSource(_currentBgmPlayer, BgmVolume, 0f, _fadeDuration);
+            }
+
+            var audioSource = GetAvailableBgmPlayer();
+            audioSource.clip = _currentBgm;
+            audioSource.volume = 0f;
+            _currentBgmPlayer = audioSource;
+            _currentBgmPlayer.Play();
+            FadeAudioSource(_currentBgmPlayer, 0f, BgmVolume, _fadeDuration);
         }
 
         /// <summary>
@@ -179,11 +205,11 @@ namespace YoukaiFox.Audio
                 return;
             }
 
-            FadeOutBgm(fadeOutDuration);
+            FadeAudioSource(_currentBgmPlayer, BgmVolume, 0f, fadeOutDuration);
         }
 
         /// <summary>
-        /// Plays an AudioClip.
+        /// Plays an AudioClip using the settings for sound effects.
         /// </summary>
         /// <param name="clip">AudioClip to be played.</param>
         /// <param name="loop">Loops sound effect.</param>
@@ -198,15 +224,126 @@ namespace YoukaiFox.Audio
 
             if (!loop)
             {
-                player.PlayOneShot(clip, _sfxVolume);
+                player.PlayOneShot(clip, SfxVolume);
             }
             else
             {
                 player.loop = loop;
                 player.clip = clip;
-                player.volume = _sfxVolume;
+                player.volume = SfxVolume;
                 player.Play();
             }
+        }
+
+        /// <summary>
+        /// Plays an AudioClip using the settings for sound effects.
+        /// </summary>
+        /// <param name="clip">AudioClip to be played.</param>
+        /// <param name="loop">Loops sound effect.</param>
+        public void PlaySfx(AudioClip clip, Vector2 position, bool loop = false)
+        {
+            if ((_isMuted) || (clip == null))
+            {
+                return;
+            }
+
+            var player = GetAvailableSfxPlayer();
+            player.transform.position = position;
+
+            if (!loop)
+            {
+                player.PlayOneShot(clip, SfxVolume);
+            }
+            else
+            {
+                player.loop = loop;
+                player.clip = clip;
+                player.volume = SfxVolume;
+                player.Play();
+            }
+        }
+
+        /// <summary>
+        /// Plays an AudioClip using the settings for sound effects.
+        /// </summary>
+        /// <param name="clip">AudioClip to be played.</param>
+        /// <param name="loop">Loops sound effect.</param>
+        public void PlaySfx(AudioClip clip, Vector3 position, bool loop = false)
+        {
+            if ((_isMuted) || (clip == null))
+            {
+                return;
+            }
+
+            var player = GetAvailableSfxPlayer();
+            player.transform.position = position;
+
+            if (!loop)
+            {
+                player.PlayOneShot(clip, SfxVolume);
+            }
+            else
+            {
+                player.loop = loop;
+                player.clip = clip;
+                player.volume = SfxVolume;
+                player.Play();
+            }
+        }
+
+        /// <summary>
+        /// Plays an AudioClip using settings for voice sound.
+        /// </summary>
+        /// <param name="clip">AudioClip to be played.</param>
+        public void PlayVoice(AudioClip clip)
+        {
+            if ((_isMuted) || (clip == null))
+            {
+                return;
+            }
+
+            var player = GetAvailableVoicePlayer();
+            player.clip = clip;
+            player.volume = VoiceVolume;
+            player.Play();
+        }
+
+        /// <summary>
+        /// Plays an AudioClip using settings for voice sound.
+        /// </summary>
+        /// <param name="clip">AudioClip to be played.</param>
+        /// <param name="position">Position to spawn the audio source.</param>
+        public void PlayVoice(AudioClip clip, Vector2 position)
+        {
+            if ((_isMuted) || (clip == null))
+            {
+                return;
+            }
+
+            var player = GetAvailableVoicePlayer();
+            player.transform.position = position;
+            player.clip = clip;
+            player.volume = VoiceVolume;
+            player.Play();
+        }
+
+        /// <summary>
+        /// Plays an AudioClip using settings for voice sound.
+        /// </summary>
+        /// <param name="clip">AudioClip to be played.</param>
+        /// <param name="position">Position to spawn the audio source.</param>
+        public void PlayVoice(AudioClip clip, Vector3 position)
+        {
+            if ((_isMuted) || (clip == null))
+            {
+                return;
+            }
+
+            var player = GetAvailableVoicePlayer();
+            player.transform.position = position;
+            player.clip = clip;
+            player.volume = VoiceVolume;
+            player.Play();
         }
 
         public void StopAllSfx()
@@ -226,17 +363,18 @@ namespace YoukaiFox.Audio
         /// <param name="settings">New values for the settings.</param>
         public void UpdateSettings(AudioSettings settings)
         {
+            _masterVolume = settings.MasterVolume;
             _bgmVolume = settings.BgmVolume;
             _sfxVolume = settings.SfxVolume;
+            _voiceVolume = settings.VoiceVolume;
 
-            if ((settings.IsMuted) && (!_isMuted))
+            if (settings.IsMuted && (!_isMuted))
             {
-                SetMute(true);
+                SetMute(settings.IsMuted);
             }
-            else if ((!settings.IsMuted) && (!_isMuted))
+            else if ((!settings.IsMuted) && _isMuted)
             {
-                
-                SetMute(false);
+                SetMute(settings.IsMuted);
             }
 
             _isMuted = settings.IsMuted;
@@ -251,8 +389,10 @@ namespace YoukaiFox.Audio
         {
             var settings = new AudioSettings
             {
-                BgmVolume = _bgmVolume,
-                SfxVolume = _sfxVolume,
+                MasterVolume = _masterVolume,
+                BgmVolume = BgmVolume,
+                SfxVolume = SfxVolume,
+                VoiceVolume = VoiceVolume,
                 IsMuted = _isMuted
             };
 
@@ -268,11 +408,6 @@ namespace YoukaiFox.Audio
 
         private void SetMute(bool mute)
         {
-            if (!_isMuted)
-            {
-                return;
-            }
-
             foreach (var player in _bgmPlayers)
             {
                 player.mute = mute;
@@ -287,40 +422,47 @@ namespace YoukaiFox.Audio
                         player.Stop();
                     }
                 }
+                
+                foreach (var player in _voicePlayers)
+                {
+                    if (player.isPlaying)
+                    {
+                        player.Stop();
+                    }
+                }
             }
         }
 
         private void UpdateVolume()
         {
-            if (!_isMuted)
+            foreach (var player in _bgmPlayers)
             {
-                return;
-            }
-
-            if (_currentBgmPlayer.isPlaying)
-            {
-                _currentBgmPlayer.volume = _bgmVolume;
+                if (player.isPlaying)
+                {
+                    player.volume = BgmVolume;
+                }
             }
 
             foreach (var player in _sfxPlayers)
             {
                 if (player.isPlaying)
                 {
-                    player.volume = _sfxVolume;
+                    player.volume = SfxVolume;
+                }
+            }
+
+            foreach (var player in _voicePlayers)
+            {
+                if (player.isPlaying)
+                {
+                    player.volume = VoiceVolume;
                 }
             }
         }
 
-        private void Crossfade(AudioSource previous, AudioSource current)
+        private void FadeAudioSource(AudioSource audioSource, float from, float to, float duration)
         {
-            if (_isCrossfading)
-            {
-                return;
-            }
-
-            _isCrossfading = true;
-            current.volume = 0f;
-            previous.DOFade(0f, _crossfadeDuration).OnComplete(() => current.DOFade(_bgmVolume, _crossfadeDuration).OnComplete(() => _isCrossfading = false));
+            StartCoroutine(FadeAudioSourceRoutine(audioSource, from, to, duration));
         }
 
         private AudioSource GetAvailableBgmPlayer()
@@ -356,17 +498,22 @@ namespace YoukaiFox.Audio
             _sfxPlayers.Add(newSource);
             return newSource;
         }
-
-        private void FadeOutBgm(float fadeOutDuration)
+        
+        private AudioSource GetAvailableVoicePlayer()
         {
-            _isFading = true;
-            _currentBgmPlayer.DOFade(0f, fadeOutDuration).OnComplete(FinishFadingOut);
-        }
+            foreach (var player in _voicePlayers)
+            {
+                if (!player.isPlaying)
+                {
+                    return player;
+                }
+            }
 
-        private void FinishFadingOut()
-        {
-            _isFading = false;
-            _currentBgmPlayer.Stop();
+            var newSourceIndex = _voicePlayers.Count;
+            var newSource = InstantiateAudioSource($"Voice Player {newSourceIndex}");
+            newSource.loop = false;
+            _voicePlayers.Add(newSource);
+            return newSource;
         }
 
         #region Setup operations
@@ -392,7 +539,6 @@ namespace YoukaiFox.Audio
             for (int i = 0; i < BgmPlayersCount; i++)
             {
                 var bgmPlayer = InstantiateAudioSource($"BGM Player {i}");
-                bgmPlayer.playOnAwake = false;
                 bgmPlayer.loop = true;
                 _bgmPlayers.Add(bgmPlayer);
             }
@@ -403,9 +549,17 @@ namespace YoukaiFox.Audio
             for (int i = 0; i < SfxPlayersCount; i++)
             {
                 var sfxPlayer = InstantiateAudioSource($"SFX Player {i}");
-                sfxPlayer.playOnAwake = false;
                 sfxPlayer.loop = false;
                 _sfxPlayers.Add(sfxPlayer);
+            }
+
+            _voicePlayers = new List<AudioSource>();
+
+            for (int i = 0; i < VoicePlayersCount; i++)
+            {
+                var voicePlayer = InstantiateAudioSource($"Voice Player {i}");
+                voicePlayer.loop = false;
+                _voicePlayers.Add(voicePlayer);
             }
         }
 
@@ -413,7 +567,31 @@ namespace YoukaiFox.Audio
         {
             var newGameObject = Instantiate(new GameObject(name), _transform, false);
             var newAudioSource = newGameObject.AddComponent<AudioSource>();
+            newAudioSource.playOnAwake = false;
             return newAudioSource;
+        }
+
+        #endregion
+
+        #region Coroutines
+
+        private IEnumerator FadeAudioSourceRoutine(AudioSource audioSource, float from, float to, float duration)
+        {
+            var timeElapsed = 0f;
+
+            while (timeElapsed < duration)
+            {
+                audioSource.volume = Mathf.Clamp01(Mathf.Lerp(from, to, timeElapsed / duration));
+                yield return null;
+                timeElapsed += Time.deltaTime;
+            }
+
+            if (to == 0f)
+            {
+                audioSource.Stop();
+            }
+
+            UpdateVolume();
         }
 
         #endregion
@@ -429,8 +607,10 @@ namespace YoukaiFox.Audio
 
             var soundSettings = GetCurrentSettings();
             PlayerPrefs.SetInt("is_sound_muted", soundSettings.IsMuted ? 1 : 0);
+            PlayerPrefs.SetFloat("master_volume", soundSettings.MasterVolume);
             PlayerPrefs.SetFloat("sfx_volume", soundSettings.SfxVolume);
             PlayerPrefs.SetFloat("bgm_volume", soundSettings.BgmVolume);
+            PlayerPrefs.SetFloat("voice_volume", soundSettings.VoiceVolume);
         }
 
         private void LoadSettings()
@@ -441,8 +621,10 @@ namespace YoukaiFox.Audio
             }
 
             _isMuted = PlayerPrefs.GetInt("is_sound_muted", 0) == 1;
+            _masterVolume = PlayerPrefs.GetFloat("master_volume", 1f);
             _sfxVolume = PlayerPrefs.GetFloat("sfx_volume", 1f);
             _bgmVolume = PlayerPrefs.GetFloat("bgm_volume", 1f);
+            _voiceVolume = PlayerPrefs.GetFloat("voice_volume", 1f);
 
             SetMute(_isMuted);
             UpdateVolume();

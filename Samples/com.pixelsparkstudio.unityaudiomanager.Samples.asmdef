@@ -1,0 +1,15 @@
+{
+    "name": "com.pixelsparkstudio.unityaudiomanager.Samples",
+    "references": [
+        "GUID:5f0ae74a30e3e8c418e0c0e5d43b2344"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
