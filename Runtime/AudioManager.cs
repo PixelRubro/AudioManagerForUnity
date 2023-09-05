@@ -290,6 +290,20 @@ namespace PixelSpark.UnityAudioManager
                 player.Play();
             }
         }
+        
+        /// <summary>
+        /// Stops every audio source playing a sound effect.
+        /// </summary>
+        public void StopAllSfx()
+        {
+            foreach (var player in _sfxPlayers)
+            {
+                if (player.isPlaying)
+                {
+                    player.Stop();
+                }
+            }
+        }
 
         /// <summary>
         /// Plays an AudioClip using settings for voice sound.
@@ -346,9 +360,12 @@ namespace PixelSpark.UnityAudioManager
             player.Play();
         }
 
-        public void StopAllSfx()
+        /// <summary>
+        /// Stops every audio source playing a voice clip.
+        /// </summary>
+        public void StopAllVoice()
         {
-            foreach (var player in _sfxPlayers)
+            foreach (var player in _voicePlayers)
             {
                 if (player.isPlaying)
                 {
