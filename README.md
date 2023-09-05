@@ -53,11 +53,15 @@ Example use:
 
 ### Extra
 
-A script called `AudioSettingsMenu.cs` can be used to speed up the implementation of a audio settings menu.
+- A script called `AudioSettingsMenu.cs` can be used to speed up the implementation of a audio settings menu.
+- There is a demo scene to play around with the manager.
 
 ## Credits (Demo)
 
 Graphics: [kenney.nl](https://kenney.nl)
+
 Font: [kenney.nl](https://kenney.nl)
+
 Audio effects and voiceovers: [kenney.nl](https://kenney.nl)
+
 Music: [freepd.com](https://freepd.com) (by Kevin MacLeod, Anonymous and dogsounds.)
