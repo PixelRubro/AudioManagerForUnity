@@ -1,4 +1,4 @@
-# Unity Audio Manager
+# Simple Audio Manager
 
 ## Installing
 
@@ -7,13 +7,13 @@
 - Open the Package Manager window
 - Click on the "plus" sign
 - Select "Add package from git URL"
-- Paste this repo's SSH link (<git@github.com>:PixelSparkStudio/UnityAudioManager.git)
+- Paste this repo's SSH link (<git@github.com>:VermillionVanguard/SimpleAudioManager.git)
 
 ### Editing manifest file
 
 Add the following line to your `manifest.json` found in the "Packages" folder
 
-`"com.pixelsparkstudio.unityaudiomanager": "git@github.com:PixelSparkStudio/UnityAudioManager.git"`
+`"com.vermillionvanguard.simpleaudiomanager": "git@github.com:VermillionVanguard/SimpleAudioManager.git"`
 
 ## How to use
 
