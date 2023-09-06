@@ -51,6 +51,10 @@ Example use:
 
 `public void StopAllVoice()`
 
+## Why can't I open the demo scene?
+
+This is a limitation known by the Unity team. Until they look at it, you will have to drag the scene file into somewhere in your "Assets" folder.
+
 ### Extra
 
 - A script called `AudioSettingsMenu.cs` can be used to speed up the implementation of a audio settings menu.
