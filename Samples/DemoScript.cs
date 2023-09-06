@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace PixelSpark.UnityAudioManager.Demo
+namespace VermillionVanguard.SimpleAudioManager.Demo
 {
     public class DemoScript : MonoBehaviour
     {

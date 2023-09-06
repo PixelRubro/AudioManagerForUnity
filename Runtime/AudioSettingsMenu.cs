@@ -1,9 +1,7 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace PixelSpark.UnityAudioManager
+namespace VermillionVanguard.SimpleAudioManager
 {
     public class AudioSettingsMenu : MonoBehaviour
     {
