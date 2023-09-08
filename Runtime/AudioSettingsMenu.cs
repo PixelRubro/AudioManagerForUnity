@@ -26,9 +26,6 @@ namespace VermillionVanguard.SimpleAudioManager
         private Toggle _muteSoundToggle;
 
         [SerializeField]
-        private bool _updateOnValueChanged = true;
-
-        [SerializeField]
         [Tooltip("An audio clip to play when adjusting the volume.")]
         private AudioClip _audioTestClip;
 
