@@ -7,13 +7,13 @@
 - Open the Package Manager window
 - Click on the "plus" sign
 - Select "Add package from git URL"
-- Paste this repo's SSH link (<git@github.com>:VermillionVanguard/SimpleAudioManager.git)
+- Paste this repo's SSH link (<git@github.com>:PixelRouge/AudioManagerForUnity.git)
 
 ### Editing manifest file
 
 Add the following line to your `manifest.json` found in the "Packages" folder
 
-`"com.vermillionvanguard.simpleaudiomanager": "git@github.com:VermillionVanguard/SimpleAudioManager.git"`
+`"com.pixelrouge.audiomanagerforunity": "git@github.com:PixelRouge/AudioManagerForUnity.git"`
 
 ## How to use
 

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 
-namespace VermillionVanguard.SimpleAudioManager
+namespace PixelRouge.SimpleAudioManager
 {
     public class AudioSettingsMenu : MonoBehaviour
     {
